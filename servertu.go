@@ -1,6 +1,7 @@
 package mbserver
 
 import (
+	"errors"
 	"io"
 	"log"
 
@@ -18,7 +19,10 @@ func (s *Server) ListenRTU(serialConfig *serial.Config) (err error) {
 
 	s.portsWG.Add(1)
 	go func() {
-		defer s.portsWG.Done()
+		defer func(){
+			s.portsWG.Done()
+			// TODO notify caller of ListenRTU we stop accepting requests for this serialConfig, possibliy by sending sth to a channel passed to ListenRTU
+		}
 		s.acceptSerialRequests(port)
 	}()
 
@@ -37,6 +41,11 @@ func (s *Server) acceptSerialRequests(port serial.Port) {
 		buffer := make([]byte, 512)
 
 		bytesRead, err := port.Read(buffer)
+		
+		// dont exit loop for a timeout reading request
+		if errors.Is(err, serial.ErrTimeout) {
+			continue
+		}
 		if err != nil {
 			if err != io.EOF {
 				log.Printf("serial read error %v\n", err)
