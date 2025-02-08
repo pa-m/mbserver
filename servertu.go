@@ -22,7 +22,7 @@ func (s *Server) ListenRTU(serialConfig *serial.Config) (err error) {
 		defer func(){
 			s.portsWG.Done()
 			// TODO notify caller of ListenRTU we stop accepting requests for this serialConfig, possibliy by sending sth to a channel passed to ListenRTU
-		}
+		}()
 		s.acceptSerialRequests(port)
 	}()
 
